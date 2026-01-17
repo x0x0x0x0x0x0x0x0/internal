@@ -1,4 +1,3 @@
-
 local Main = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Players = game:GetService("Players")
@@ -9,8 +8,6 @@ local LocalPlayer = Players.LocalPlayer
 local AutoParryEnabled = false
 local AutoClashEnabled = false
 local ParryThreshold = 0.55
-local BallESPEnabled = false
-local PlayerESPEnabled = false
 
 local Parried = false
 local LastBall = nil
@@ -20,14 +17,13 @@ local Window = Main:CreateWindow({
     Title = "x0 hub",
     SubTitle = "by x0x0x0x0x0x0x0x0",
     TabWidth = 160,
-    Size = UDim2.fromOffset(550, 450),
+    Size = UDim2.fromOffset(500, 350),
     Acrylic = false,
     Theme = "Dark"
 })
 
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "swords" }),
-    Visuals = Window:AddTab({ Title = "Visuals", Icon = "eye" }),
     Player = Window:AddTab({ Title = "Player", Icon = "user" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
@@ -102,26 +98,6 @@ do
 end
 
 do
-    local ESPSection = Tabs.Visuals:AddSection("ESP")
-    
-    ESPSection:AddToggle("BallESP", {
-        Title = "Ball ESP",
-        Default = false,
-        Callback = function(Value)
-            BallESPEnabled = Value
-        end
-    })
-    
-    ESPSection:AddToggle("PlayerESP", {
-        Title = "Player ESP",
-        Default = false,
-        Callback = function(Value)
-            PlayerESPEnabled = Value
-        end
-    })
-end
-
-do
     local PlayerSection = Tabs.Player:AddSection("Movement")
     
     PlayerSection:AddSlider("WalkSpeed", {
@@ -176,6 +152,14 @@ RunService.PreSimulation:Connect(function()
     
     if Speed <= 0 then return end
     
+    local DirectionToPlayer = (HRP.Position - Ball.Position).Unit
+    local VelocityUnit = VelocityVector.Unit
+    local DotProduct = DirectionToPlayer:Dot(VelocityUnit)
+    
+    if DotProduct < 0 then
+        return
+    end
+    
     if AutoClashEnabled and Distance < 20 then
         SpamClick()
         return
@@ -184,32 +168,6 @@ RunService.PreSimulation:Connect(function()
     if not Parried and (Distance / Speed) <= ParryThreshold then
         Click()
         Parried = true
-    end
-end)
-
-task.spawn(function()
-    while true do
-        task.wait(1)
-        if BallESPEnabled then
-            local Ball = GetRealBall()
-            if Ball and not Ball:FindFirstChild("ESP_Highlight") then
-                local hl = Instance.new("Highlight")
-                hl.Name = "ESP_Highlight"
-                hl.FillColor = Color3.fromRGB(255, 0, 0)
-                hl.Parent = Ball
-            end
-        end
-        
-        if PlayerESPEnabled then
-            for _, v in ipairs(Players:GetPlayers()) do
-                if v ~= LocalPlayer and v.Character and not v.Character:FindFirstChild("ESP_Highlight") then
-                    local hl = Instance.new("Highlight")
-                    hl.Name = "ESP_Highlight"
-                    hl.FillColor = Color3.fromRGB(0, 255, 0)
-                    hl.Parent = v.Character
-                end
-            end
-        end
     end
 end)
 
